@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>LandingPage1</title>
+</head>
+<body>
+<table style="text-align: left; width: 957px; "
+ border="0" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+	<img  alt="eRemedy"  src="site/display/eremedy.jpg"></td>
+    </tr>
+    <tr>
+      <td  style="width: 390px;  height: 140px;">
+	<span style="font-family: Calibri; font-weight: bold;color:grey;">
+	   &nbsp;&nbsp;&nbsp; * Learn about various drugs, devices and biologics 
+         </span><br
+ style="font-family: Calibri; font-weight: bold;">
+      <span style="font-family: Calibri; font-weight: bold;color:grey;">&nbsp;&nbsp;&nbsp;
+* Order drug samples</span><br
+ style="font-family: Calibri; font-weight: bold;">
+      <span style="font-family: Calibri; font-weight: bold;color:grey;">&nbsp;&nbsp;&nbsp;
+* Collaborate with your peers to learn from and educate each other</span><br
+ style="font-family: Calibri; font-weight: bold;">
+      <span style="font-family: Calibri; font-weight: bold;color:grey;">&nbsp;&nbsp;&nbsp;
+* Continue your medical education on certain specialty tracks</span><br
+ style="font-family: Calibri; font-weight: bold;">
+      <span style="font-family: Calibri; font-weight: bold;color:grey;">&nbsp;&nbsp;&nbsp;
+* Receive compliance updates</span><br
+ style="font-family: Calibri; font-weight: bold;">
+      </td>
+    </tr>
+    <tr> 
+     <td>
+       <center>  <img src="site/img/eremedy_logo.jpg" alt="Home" width="180" border="1" height="60" class="brdr1"> </center>
+ <br />
+      <span style="font-family: Calibri; font-weight: bold;color:grey;">&nbsp;&nbsp;&nbsp;
+* Do all of the above on a schedule that suits you best without
+compromising limited time allocated for direct patient  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; care</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,50 @@
+.cntrW1 { width: 100%; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px; }
+.cntrTbg { background-color:green; } 
+.cntrCbg { background-color: transparent; } 
+.cntrBbg { background-color: transparent; } 
+.cntrBrdr { border-style: solid;border-color: green; }
+.cntrTb { 
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 1px;
+border-bottom-width: 0px;
+-moz-border-radius-topright: 20px;
+border-top-right-radius: 20px;
+-moz-border-radius-topleft: 20px;
+border-top-left-radius: 20px;
+ }
+.cntrCb { 
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 0px;
+border-bottom-width: 0px;
+ }
+.cntrBb { 
+border-left-width: 1px;
+border-right-width: 1px;
+border-top-width: 0px;
+border-bottom-width: 1px;
+-moz-border-radius-bottomright: 20px;
+border-bottom-right-radius: 20px;
+-moz-border-radius-bottomleft: 20px;
+border-bottom-left-radius: 20px;
+ }
+
+.cntrPL { padding-left: 20px }
+.cntrPR { padding-right: 20px }
+.cntrFL { FLoat: left; }
+.cntrFR { FLoat:right; }
+.cntrClear { cntrClear: both; }
+.cntrMargin { margin-bottom: 50px; }
+.cntrT { height: 25px; }
+.cntrC { height: 100%; }
+.cntrB { height: 10px; }
+
+
+
+
+/* $class classe */
+.cw350 { width: 350px; height: 150px; }
+.cw250 { width: 250px; height: 250px; }
+
+

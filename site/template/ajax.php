@@ -1,0 +1,1 @@
+<?php foreach( $ENG["ajaxdisplay"] as $pg ) {  if( strlen( rtrim($pg) ) ) { include $pg ; }  } ?>

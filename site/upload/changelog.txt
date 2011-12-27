@@ -1,0 +1,78 @@
+delimiter //
+drop procedure DPM_UP_PRODUCT_AREA_ADMIN_GET //
+
+create procedure DPM_UP_PRODUCT_AREA_ADMIN_GET( 
+p_product_id bigint unsigned
+)
+
+begin
+
+SELECT  TA.*,
+        PA.product_area_id,
+        PA.product_id ,
+        PA.active_flag as product_area_active_flag
+FROM    DAD_V_CONCEPT_RELATE as TA
+        left join DPM_T_PRODUCT_AREA as PA
+            on TA.child_concept_id = PA.product_area_concept_id 
+            and PA.product_id = p_product_id
+WHERE TA.parent_concept_code = 'THERAPAREA'
+
+ORDER BY TA.sort_level, TA.child_concept_display
+;
+
+end
+//
+
+#################################################
+add this to pull\edit_adminproduct.php
+
+$qProdArea = $conn->product_area_admin_get($product_id );
+
+
+################################################
+add this to mainclass.php
+
+
+public function product_area_admin_get( $productid = null) {
+	$arg = func_get_args();
+	$this->paramSafe( $arg , $arg );
+$theSQL = <<<zz
+call DPM_UP_PRODUCT_AREA_ADMIN_GET( $arg[0]); 
+zz;
+   //echo $theSQL;
+   return $this->runQuery( $theSQL );
+} //product_area_admin_get
+
+
+
+
+public function productareaMGR( $product_area_id = null, $product_id = null, $product_area_concept_id = null, $active = null ) {
+	$arg = func_get_args();
+	$this->paramSafe( $arg , $arg );
+$theSQL = <<<zz
+call DPM_UP_PRODUCT_AREA_MGR( $arg[0], $arg[1], $arg[2], $arg[3]); 
+zz;
+   //echo $theSQL;
+   return $this->runQuery( $theSQL );
+} //productareaMGR
+
+
+###################################
+add this around line 99 to admit_edit_product.php
+
+<?php require_once "site/display/product/admin_edit_product_area.php"; ?>	
+	
+
+
+#########################################
+add to taskmanager.php
+
+case "togglearea":
+	 $ENG["commit"][] = "site/commit/togglearea.php";
+break;
+
+	
+case "ajaxpatag":
+	$ENG["ajaxdisplay"] = array();
+	$ENG["ajaxdisplay"][] = "site/display/ajaxpatag.php"; // none for home page
+	break;

@@ -1,0 +1,301 @@
+DELIMITER $$
+CREATE TABLE IF NOT EXISTS `DAD_T_CONCEPT` (
+  `concept_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `concept_code` varchar(31) DEFAULT NULL,
+  `concept_display` varchar(255) DEFAULT NULL,
+  `concept_desc` varchar(255) DEFAULT NULL,
+  `active_flag` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`concept_id`)
+)
+$$
+
+CREATE TABLE IF NOT EXISTS `DAD_T_CONCEPT_RELATE` (
+  `concept_relate_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `parent_concept_id` bigint(20) unsigned DEFAULT NULL,
+  `child_concept_id` bigint(20) unsigned DEFAULT NULL,
+  `sort_level` tinyint(3) unsigned DEFAULT '100',
+  `active_flag` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`concept_relate_id`)
+)
+$$
+
+create view `DAD_V_CONCEPT_RELATE`
+
+as
+
+SELECT 
+`a`.`concept_relate_id`, 
+`a`.`parent_concept_id`, 
+`p`.`concept_code` as `parent_concept_code`, 
+`p`.`concept_display` as `parent_concept_display`, 
+`p`.`concept_desc` as `parent_concept_desc`, 
+`p`.`active_flag` as `parent_active_flag`,
+`a`.`child_concept_id`, 
+`c`.`concept_code` as `child_concept_code`, 
+`c`.`concept_display` as `child_concept_display`, 
+`c`.`concept_desc` as `child_concept_desc`, 
+coalesce(`c`.`active_flag`,1) as `child_active_flag`,
+`a`.`sort_level`, 
+`a`.`active_flag` as `concept_relate_active_flag`
+
+FROM `DAD_T_CONCEPT_RELATE` as `a`
+inner join `DAD_T_CONCEPT` as `p` on `a`.`parent_concept_id` = `p`.`concept_id`
+left join `DAD_T_CONCEPT` as `c` on `a`.`child_concept_id` = `c`.`concept_id`
+
+$$
+
+create procedure `DAD_P_CONCEPT_RELATE`( 
+`p_concept_relate_id` bigint unsigned,
+`p_parent_concept_code` varchar(31) ,
+`p_concept_relate_active_flag` tinyint(1),
+`p_parent_active_flag` tinyint(1),
+`p_child_active_flag` tinyint(1)
+)
+begin
+
+SELECT 
+`concept_relate_id`, `parent_concept_id`, `parent_concept_code`, `parent_concept_display`, 
+`parent_concept_desc`, `parent_active_flag`, `child_concept_id`, `child_concept_code`, 
+`child_concept_display`, `child_concept_desc`, `child_active_flag`, `sort_level`, `concept_relate_active_flag`
+
+FROM `DAD_V_CONCEPT_RELATE` 
+
+WHERE 1
+and `concept_relate_id` = coalesce( `p_concept_relate_id` , `concept_relate_id`)
+and `parent_concept_code` = coalesce( `p_parent_concept_code` , `parent_concept_code`)
+and `concept_relate_active_flag` = coalesce(`p_concept_relate_active_flag` ,`concept_relate_active_flag` )
+and `parent_active_flag` = coalesce(`p_parent_active_flag` ,`parent_active_flag` )
+and `child_active_flag` = coalesce(`p_child_active_flag` ,`child_active_flag` )
+
+ORDER BY 
+`parent_concept_display`,
+`parent_concept_code`,
+`sort_level`,
+`child_concept_display`,
+`child_concept_code`;
+
+end
+
+$$
+
+
+create table IF NOT EXISTS `DAD_T_KEYMANAGER`(
+`tablename` varchar(63),
+`tablekey` int unsigned default 1,
+`tablekey2` int unsigned default 1,
+  PRIMARY KEY (`tablename`)
+)
+$$
+
+CREATE FUNCTION `getTablekey`( `p_tablename` varchar(63) ) RETURNS bigint(20) unsigned
+begin
+declare `p1` int unsigned;
+declare `p2` int unsigned;
+declare `pRTN` bigint unsigned;
+
+select  `tablekey`, `tablekey2` into `p1`, `p2` from `DAD_T_KEYMANAGER` where `tablename` = `p_tablename`;
+
+if p1 is null then
+insert into `DAD_T_KEYMANAGER` ( `tablekey`,`tablekey2`,`tablename` ) values ( 1, 1, `p_tablename`);
+set p1 = 1;
+set p2 = 1;
+end if;
+
+set pRTN = CONCAT( 1 , DATE_FORMAT(now(), '%H%y' ) , INSERT('0000', 5 - CHAR_LENGTH(p1), 4, p1), DATE_FORMAT(now(), '%i%d' ) , INSERT('000', 4 - CHAR_LENGTH(p2), 3, p1),DATE_FORMAT(now(), '%S%m' ) );
+
+/* don't let the p1 key get above 9999 */
+if `p1` >= 9999 then
+set `p1` = 0;
+set `p2` = `p2`+1;
+end if;
+/* don't let the p2 key get above 999 */
+if `p2` >= 999 then
+set `p2` = 0;
+end if;
+
+update `DAD_T_KEYMANAGER` set `tablekey` = `p1` + 1, `tablekey2` = `p2` where `tablename` = `p_tablename`;
+
+return pRTN;
+
+end
+$$
+
+create table IF NOT EXISTS `DPM_T_PRODUCT`(
+`product_id`  bigint unsigned NOT NULL PRIMARY KEY , `company_id`  bigint unsigned NOT NULL, `product_name`  varchar(255) NOT NULL, `product_desc`  text NOT NULL, `product_code`  varchar(31) NOT NULL, `active_flag`  tinyint NOT NULL DEFAULT 1, `sort`  int unsigned NOT NULL DEFAULT 1000
+)
+$$
+
+create table IF NOT EXISTS `DPM_T_PRODUCT_DETAIL`(
+`product_detail_id`  bigint unsigned NOT NULL PRIMARY KEY , `product_id`  bigint unsigned NOT NULL, `detail_group_concept_id`  bigint unsigned NOT NULL, `detail_type_concept_id`  bigint unsigned NOT NULL, `detail_name`  varchar(255) NOT NULL, `detail_value`  text NOT NULL, `active_flag`  tinyint NOT NULL DEFAULT 1, `sort`  int unsigned NOT NULL DEFAULT 1000
+)
+$$
+
+create table IF NOT EXISTS `DPM_T_PRODUCT_PART_PROFILE`(
+`product_part_profile_id`  bigint unsigned NOT NULL PRIMARY KEY , `product_id`  bigint unsigned NOT NULL, `product_detail_id`  bigint unsigned NOT NULL, `profile_id`  bigint unsigned NOT NULL, `active_flag`  tinyint NOT NULL DEFAULT 1
+)
+$$
+create procedure `DPM_UP_PRODUCT_MGR`( p_product_id  bigint unsigned, p_company_id  bigint unsigned, p_product_name  varchar(255), p_product_desc  text, p_product_code  varchar(31), p_active_flag  tinyint, p_sort  int unsigned )
+begin
+
+DECLARE vCheck int;
+SELECT count(*) INTO vCheck FROM `DPM_T_PRODUCT` WHERE `product_id` = `p_product_id`;
+
+IF vCheck = 0 THEN /*insert*/
+   IF ISNULL(p_product_id) THEN
+   	  set p_product_id = getTablekey('DPM_T_PRODUCT');
+   END IF;
+    
+   insert into `DPM_T_PRODUCT` ( `product_id`, `company_id`, `product_name`, `product_desc`, `product_code`, `active_flag`, `sort` )
+   values ( coalesce( `p_product_id` , null ),coalesce( `p_company_id` , null ),coalesce( `p_product_name` , null ),coalesce( `p_product_desc` , null ),coalesce( `p_product_code` , null ),coalesce( `p_active_flag` , null ),coalesce( `p_sort` , null ) );
+
+ELSE /*update*/
+	update `DPM_T_PRODUCT`
+	set 
+`company_id` =  coalesce( `p_company_id`, `company_id` ),
+`product_name` =  coalesce( `p_product_name`, `product_name` ),
+`product_desc` =  coalesce( `p_product_desc`, `product_desc` ),
+`product_code` =  coalesce( `p_product_code`, `product_code` ),
+`active_flag` =  coalesce( `p_active_flag`, `active_flag` ),
+`sort` =  coalesce( `p_sort`, `sort` )
+	where `product_id` = `p_product_id`;
+END IF;
+
+
+select `p_product_id` as `product_id`;
+
+END
+$$
+
+create procedure `DPM_UP_PRODUCT_DETAIL_MGR`( p_product_detail_id  bigint unsigned, p_product_id  bigint unsigned, p_detail_group_concept_id  bigint unsigned, p_detail_type_concept_id  bigint unsigned, p_detail_name  varchar(255), p_detail_value  text, p_active_flag  tinyint, p_sort  int unsigned )
+begin
+
+DECLARE vCheck int;
+SELECT count(*) INTO vCheck FROM `DPM_T_PRODUCT_DETAIL` WHERE `product_detail_id` = `p_product_detail_id`;
+
+IF vCheck = 0 THEN /*insert*/
+   IF ISNULL(p_product_detail_id) THEN
+   	  set p_product_detail_id = getTablekey('DPM_T_PRODUCT_DETAIL');
+   END IF;
+    
+   insert into `DPM_T_PRODUCT_DETAIL` ( `product_detail_id`, `product_id`, `detail_group_concept_id`, `detail_type_concept_id`, `detail_name`, `detail_value`, `active_flag`, `sort` )
+   values ( coalesce( `p_product_detail_id` , null ),coalesce( `p_product_id` , null ),coalesce( `p_detail_group_concept_id` , null ),coalesce( `p_detail_type_concept_id` , null ),coalesce( `p_detail_name` , null ),coalesce( `p_detail_value` , null ),coalesce( `p_active_flag` , null ),coalesce( `p_sort` , null ) );
+
+ELSE /*update*/
+	update `DPM_T_PRODUCT_DETAIL`
+	set 
+`product_id` =  coalesce( `p_product_id`, `product_id` ),
+`detail_group_concept_id` =  coalesce( `p_detail_group_concept_id`, `detail_group_concept_id` ),
+`detail_type_concept_id` =  coalesce( `p_detail_type_concept_id`, `detail_type_concept_id` ),
+`detail_name` =  coalesce( `p_detail_name`, `detail_name` ),
+`detail_value` =  coalesce( `p_detail_value`, `detail_value` ),
+`active_flag` =  coalesce( `p_active_flag`, `active_flag` ),
+`sort` =  coalesce( `p_sort`, `sort` )
+	where `product_detail_id` = `p_product_detail_id`;
+END IF;
+
+
+select `p_product_detail_id` as `product_detail_id`;
+
+END
+$$
+
+create procedure `DPM_UP_PRODUCT_PART_PROFILE_MGR`( p_product_part_profile_id  bigint unsigned, p_product_id  bigint unsigned, p_product_detail_id  bigint unsigned, p_profile_id  bigint unsigned, p_active_flag  tinyint )
+begin
+
+DECLARE vCheck int;
+SELECT count(*) INTO vCheck FROM `DPM_T_PRODUCT_PART_PROFILE` WHERE `product_part_profile_id` = `p_product_part_profile_id`;
+
+IF vCheck = 0 THEN /*insert*/
+   IF ISNULL(p_product_part_profile_id) THEN
+   	  set p_product_part_profile_id = getTablekey('DPM_T_PRODUCT_PART_PROFILE');
+   END IF;
+    
+   insert into `DPM_T_PRODUCT_PART_PROFILE` ( `product_part_profile_id`, `product_id`, `product_detail_id`, `profile_id`, `active_flag` )
+   values ( coalesce( `p_product_part_profile_id` , null ),coalesce( `p_product_id` , null ),coalesce( `p_product_detail_id` , null ),coalesce( `p_profile_id` , null ),coalesce( `p_active_flag` , null ) );
+
+ELSE /*update*/
+	update `DPM_T_PRODUCT_PART_PROFILE`
+	set 
+`product_id` =  coalesce( `p_product_id`, `product_id` ),
+`product_detail_id` =  coalesce( `p_product_detail_id`, `product_detail_id` ),
+`profile_id` =  coalesce( `p_profile_id`, `profile_id` ),
+`active_flag` =  coalesce( `p_active_flag`, `active_flag` )
+	where `product_part_profile_id` = `p_product_part_profile_id`;
+END IF;
+
+
+select `p_product_part_profile_id` as `product_part_profile_id`;
+
+END
+$$
+
+create procedure `DPM_UP_PRODUCT_GET`( p_product_id  bigint unsigned, p_company_id  bigint unsigned, p_product_name  varchar(255), p_product_desc  text, p_product_code  varchar(31), p_active_flag  tinyint, p_sort  int unsigned )
+begin
+
+select * from `DPM_T_PRODUCT` where 1=1
+and coalesce( product_id, p_product_id, -1) = coalesce( p_product_id, product_id, -1) 
+and coalesce( company_id, p_company_id, -1) = coalesce( p_company_id, company_id, -1) 
+and coalesce( product_name, p_product_name, -1) = coalesce( p_product_name, product_name, -1) 
+and coalesce( product_desc, p_product_desc, -1) = coalesce( p_product_desc, product_desc, -1) 
+and coalesce( product_code, p_product_code, -1) = coalesce( p_product_code, product_code, -1) 
+and coalesce( active_flag, p_active_flag, -1) = coalesce( p_active_flag, active_flag, -1) 
+and coalesce( sort, p_sort, -1) = coalesce( p_sort, sort, -1) 
+
+;
+
+end
+$$
+create procedure `DPM_UP_PRODUCT_DETAIL_GET`( p_product_detail_id  bigint unsigned, p_product_id  bigint unsigned, p_detail_group_concept_id  bigint unsigned, p_detail_type_concept_id  bigint unsigned, p_detail_name  varchar(255), p_detail_value  text, p_active_flag  tinyint, p_sort  int unsigned )
+begin
+
+select * from `DPM_T_PRODUCT_DETAIL` where 1=1
+and coalesce( product_detail_id, p_product_detail_id, -1) = coalesce( p_product_detail_id, product_detail_id, -1) 
+and coalesce( product_id, p_product_id, -1) = coalesce( p_product_id, product_id, -1) 
+and coalesce( detail_group_concept_id, p_detail_group_concept_id, -1) = coalesce( p_detail_group_concept_id, detail_group_concept_id, -1) 
+and coalesce( detail_type_concept_id, p_detail_type_concept_id, -1) = coalesce( p_detail_type_concept_id, detail_type_concept_id, -1) 
+and coalesce( detail_name, p_detail_name, -1) = coalesce( p_detail_name, detail_name, -1) 
+and coalesce( detail_value, p_detail_value, -1) = coalesce( p_detail_value, detail_value, -1) 
+and coalesce( active_flag, p_active_flag, -1) = coalesce( p_active_flag, active_flag, -1) 
+and coalesce( sort, p_sort, -1) = coalesce( p_sort, sort, -1) 
+
+;
+
+end
+$$
+create procedure `DPM_UP_PRODUCT_PART_PROFILE_GET`( p_product_part_profile_id  bigint unsigned, p_product_id  bigint unsigned, p_product_detail_id  bigint unsigned, p_profile_id  bigint unsigned, p_active_flag  tinyint )
+begin
+
+select * from `DPM_T_PRODUCT_PART_PROFILE` where 1=1
+and coalesce( product_part_profile_id, p_product_part_profile_id, -1) = coalesce( p_product_part_profile_id, product_part_profile_id, -1) 
+and coalesce( product_id, p_product_id, -1) = coalesce( p_product_id, product_id, -1) 
+and coalesce( product_detail_id, p_product_detail_id, -1) = coalesce( p_product_detail_id, product_detail_id, -1) 
+and coalesce( profile_id, p_profile_id, -1) = coalesce( p_profile_id, profile_id, -1) 
+and coalesce( active_flag, p_active_flag, -1) = coalesce( p_active_flag, active_flag, -1) 
+
+;
+
+end
+$$
+
+
+
+DROP PROCEDURE DPM_UP_PRODUCT_DETAIL_GET
+/
+
+CREATE PROCEDURE DPM_UP_PRODUCT_DETAIL_GET (IN p_product_detail_id bigint unsigned,IN p_product_id bigint unsigned,IN p_detail_group_concept_id bigint unsigned,IN p_detail_type_concept_id bigint unsigned,IN p_detail_name varchar(65535),IN p_detail_value text,IN p_active_flag tinyint,IN p_sort int unsigned)
+begin
+
+select * from DPM_T_PRODUCT_DETAIL where 1=1
+and coalesce( product_detail_id, p_product_detail_id, -1) = coalesce( p_product_detail_id, product_detail_id, -1) 
+and coalesce( product_id, p_product_id, -1) = coalesce( p_product_id, product_id, -1) 
+and coalesce( detail_group_concept_id, p_detail_group_concept_id, -1) = coalesce( p_detail_group_concept_id, detail_group_concept_id, -1) 
+and coalesce( detail_type_concept_id, p_detail_type_concept_id, -1) = coalesce( p_detail_type_concept_id, detail_type_concept_id, -1) 
+and coalesce( detail_name, p_detail_name, -1) = coalesce( p_detail_name, detail_name, -1) 
+and coalesce( detail_value, p_detail_value, -1) = coalesce( p_detail_value, detail_value, -1) 
+and coalesce( active_flag, p_active_flag, -1) = coalesce( p_active_flag, active_flag, -1) 
+and coalesce( sort, p_sort, -1) = coalesce( p_sort, sort, -1) 
+
+;
+
+end
+/

@@ -1,0 +1,47 @@
+DROP PROCEDURE `DPM_UP_V_PRODUCT_MEMBER_GET`//
+CREATE DEFINER=`nytyme`@`67.205.0.0/255.255.192.0` PROCEDURE `DPM_UP_V_PRODUCT_MEMBER_GET`(p_member_id  bigint unsigned)
+begin
+
+SELECT *
+FROM    `DPM_V_PRODUCT_MEMBER` 
+WHERE coalesce( member_id , p_member_id ) = coalesce( p_member_id , member_id ) 
+order by product_id;
+END
+
+
+
+
+CREATE VIEW `DPM_V_PRODUCT_MEMBER` 
+AS 
+select `p`.`product_id` AS `product_id`,
+`p`.`company_id` AS `company_id`,
+`p`.`product_name` AS `product_name`,
+`p`.`product_desc` AS `product_desc`,
+`p`.`product_code` AS `product_code`,
+`p`.`product_active_flag` AS `product_active_flag`,
+`p`.`product_sort` AS `product_sort`,
+`p`.`product_logo` AS `product_logo`,
+`p`.`product_detail_id` AS `product_detail_id`,
+`p`.`detail_group_concept_id` AS `detail_group_concept_id`,
+`p`.`detail_group_concept_code` AS `detail_group_concept_code`,
+`p`.`detail_group_concept_display` AS `detail_group_concept_display`,
+`p`.`detail_group_concept_desc` AS `detail_group_concept_desc`,
+`p`.`detail_group_active_flag` AS `detail_group_active_flag`,
+`p`.`detail_type_concept_id` AS `detail_type_concept_id`,
+`p`.`detail_type_concept_code` AS `detail_type_concept_code`,
+`p`.`detail_type_concept_display` AS `detail_type_concept_display`,
+`p`.`detail_type_concept_desc` AS `detail_type_concept_desc`,
+`p`.`detail_type_active_flag` AS `detail_type_active_flag`,
+`p`.`detail_name` AS `detail_name`,
+`p`.`detail_value` AS `detail_value`,
+`p`.`product_detail_active_flag` AS `product_detail_active_flag`,
+`p`.`product_detail_sort` AS `product_detail_sort`,
+`mem`.`member_product_id` AS `member_product_id`,
+`mem`.`member_id` AS `member_id`,
+`mem`.`active_flag` AS `member_product_active_flag`,
+`mem`.`sort` AS `member_product_sort` 
+
+from (`DPM_V_PRODUCT` `p` 
+left join `DPM_T_MEMBER_PRODUCT` `mem` 
+on((`p`.`product_id` = `mem`.`product_id`)));
+
